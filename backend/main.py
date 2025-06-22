@@ -1,5 +1,5 @@
 # main.py - FastAPI Backend for Jarvis AI Assistant (Python 3.13 Compatible)
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 import google.generativeai as genai
 from pydantic import BaseModel
@@ -16,6 +16,8 @@ from typing import List, Dict , Any
 from groq import Groq
 import threading
 import requests
+
+router = APIRouter()
 
 app = FastAPI(title="Jarvis AI Assistant API", version="1.0.0")
 api_key = "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"
@@ -289,7 +291,7 @@ class JarvisCore:
 # Initialize Jarvis core
 jarvis = JarvisCore()
 
-@app.get("/")
+@router.get("/")
 async def root():
     return {
         "message": "Jarvis AI Assistant API is running",
@@ -299,7 +301,7 @@ async def root():
         }
     }
 
-@app.post("/chat")
+@router.post("/chat")
 async def chat(message: ChatMessage):
     try:
         response = await jarvis.process_command(message.message)
