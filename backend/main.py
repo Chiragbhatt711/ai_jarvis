@@ -324,6 +324,7 @@ async def speak(message: ChatMessage):
         threading.Thread(target=speak_now).start()
         return {"status": "success", "message": "Speaking text"}
     return {"status": "error", "message": "TTS not available"}
+app.include_router(router, prefix="/backend")
 
 if __name__ == "__main__":
     print("🚀 Starting Jarvis AI Assistant...")
