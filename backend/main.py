@@ -8,7 +8,7 @@ import requests
 
 # === CONFIG ===
 OLLAMA_API_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "mistral"  # Or your custom model like "jarvis-ai"
+MODEL_NAME = "rudra-ai"  # Or your custom model like "jarvis-ai"
 
 # === FASTAPI INIT ===
 app = FastAPI(title="Jarvis AI - Ollama", version="1.0.0")
