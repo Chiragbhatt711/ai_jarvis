@@ -329,3 +329,22 @@ body > * {
 main {
   flex: 1 0 auto;
 }
+
+.markdown-response {
+  margin-top: 5px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.markdown-response pre {
+  background-color: #1e1e1e;
+  color: #f8f8f2;
+  padding: 10px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.markdown-response code {
+  font-family: 'Courier New', Courier, monospace;
+  color: #fffbf0;
+}
