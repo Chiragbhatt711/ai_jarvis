@@ -19,8 +19,8 @@ function App() {
     setMessages((prev) => [...prev, userMessage]);
 
     try {
-      const res = await axios.post("http://localhost:8000/chat", {
-      // const res = await axios.post("http://13.234.35.180/chat", {
+      // const res = await axios.post("http://localhost:8000/chat", {
+      const res = await axios.post("http://3.110.223.90/backend/chat", {
         message: input,
       });
 
