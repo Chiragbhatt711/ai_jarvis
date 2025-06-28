@@ -46,7 +46,7 @@ def chat(request: ChatRequest):
                 {
                     "role": "system",
                     "content": (
-                        "You are Jarvis, an AI assistant created by Chirag Bhatt at Rudra Technovation. "
+                        "You are Rudra AI, an AI assistant created by Chirag Bhatt at Rudra Technovation. "
                         "Answer all questions normally. Only mention Chirag Bhatt if the user asks who developed you or something similar."
                     )
                 },
@@ -77,7 +77,7 @@ def chat(request: ChatRequest):
 # === HEALTH CHECK ROUTE ===
 @app.get("/")
 def root():
-    return {"message": "✅ Rudra AI (Groq + Mistral) is live."}
+    return {"message": "✅ Rudra AI is live."}
 
 # === ENTRY POINT ===
 if __name__ == "__main__":
