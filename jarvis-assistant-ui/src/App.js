@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import './App.css';
 import JarvisVoicePopup from './JarvisVoicePopup';
+import logo from './assets/logo.jpeg';
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -56,22 +57,32 @@ function App() {
                 {messages.map((msg, idx) => (
                   <div key={idx} className={`message ${msg.from === 'user' ? 'user' : ''}`}>
                     {msg.from === "jarvis" ? (
-                      <div className="markdown-response">
-                        <ReactMarkdown
-                          children={msg.text}
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeHighlight]}
-                          components={{
-                            pre: ({ node, ...props }) => (
-                              <pre style={{ background: '#1e1e1e', padding: '12px', borderRadius: '8px', overflowX: 'auto' }} {...props} />
-                            ),
-                            code: ({ node, inline, className, children, ...props }) => (
-                              <code style={{ fontFamily: 'monospace', fontSize: '0.9rem' }} {...props}>
-                                {children}
-                              </code>
-                            ),
-                          }}
-                        />
+                      <div className="d-flex align-items-start mb-2">
+                        <div className="me-2">
+                          <img
+                            src={logo}
+                            alt="Jarvis"
+                            className="rounded-circle"
+                            style={{ width: '34px', height: '31px', marginTop: '-6px', marginLeft: '-18px' }}
+                          />
+                        </div>
+                        <div className="markdown-response">
+                          <ReactMarkdown
+                            children={msg.text}
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeHighlight]}
+                            components={{
+                              pre: ({ node, ...props }) => (
+                                <pre style={{ background: '#1e1e1e', padding: '12px', borderRadius: '8px', overflowX: 'auto' }} {...props} />
+                              ),
+                              code: ({ node, inline, className, children, ...props }) => (
+                                <code style={{ fontFamily: 'monospace', fontSize: '0.9rem' }} {...props}>
+                                  {children}
+                                </code>
+                              ),
+                            }}
+                          />
+                        </div>
                       </div>
                     ) : (
                       msg.text
@@ -80,15 +91,15 @@ function App() {
                 ))}
               </span>
             </div>
-            <div id="form" className="input-group d-flex align-items-center">
+            <div id="form" className="input-group d-flex align-items-center" style={{ top: '25px' }}>
               {/* Speak Icon Placeholder */}
               <span id="speak" className="me-2"></span>
 
               {/* Input Field */}
               <input
                 type="text"
-                className="form-control me-2"
-                placeholder="Type a command..."
+                className="form-control rounded-pill me-2"
+                placeholder="Ask anything..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
@@ -132,7 +143,7 @@ function App() {
           </div>
         </div>
       </div>
-      <footer className="footer">
+      {/* <footer className="footer">
         <div className="footer">
           <div className="footer-content">
             <p className="text-center text-muted">
@@ -140,7 +151,7 @@ function App() {
             </p>
           </div>
         </div>
-      </footer>
+      </footer> */}
     </div>
   );
 }
