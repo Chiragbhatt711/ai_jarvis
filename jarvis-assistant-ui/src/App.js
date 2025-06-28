@@ -20,6 +20,7 @@ function App() {
 
     try {
       const res = await axios.post("http://localhost:8000/chat", {
+      // const res = await axios.post("http://13.234.35.180/chat", {
         message: input,
       });
 

@@ -1,4 +1,4 @@
-# main.py - FastAPI Backend with Ollama (Python 3.13 Compatible)
+# main.py - FastAPI Backend with Groq + Mistral (Python 3.13 Compatible)
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,15 +7,16 @@ from datetime import datetime
 import requests
 
 # === CONFIG ===
-OLLAMA_API_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "mistral"  # Or your custom model like "jarvis-ai"
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_API_KEY = "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"
+MODEL_NAME = "mistral-saba-24b"
 
 # === FASTAPI INIT ===
-app = FastAPI(title="Jarvis AI - Ollama", version="1.0.0")
+app = FastAPI(title="Rudra AI", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Update this in production
+    allow_origins=["*"],  # Update this for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,22 +31,42 @@ class ChatResponse(BaseModel):
     status: str
     timestamp: str
 
-# === MAIN ROUTE ===
+# === MAIN CHAT ROUTE ===
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
     try:
-        ollama_response = requests.post(OLLAMA_API_URL, json={
+        headers = {
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json"
+        }
+
+        payload = {
             "model": MODEL_NAME,
-            "prompt": request.message,
-            "stream": False
-        })
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are Jarvis, an AI assistant created by Chirag Bhatt at Rudra Technovation. "
+                        "Answer all questions normally. Only mention Chirag Bhatt if the user asks who developed you or something similar."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": request.message
+                }
+            ]
+        }
 
-        if ollama_response.status_code != 200:
-            raise HTTPException(status_code=500, detail="Ollama error: " + ollama_response.text)
+        response = requests.post(GROQ_API_URL, headers=headers, json=payload)
 
-        data = ollama_response.json()
+        if response.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Groq API error: {response.text}")
+
+        data = response.json()
+        message_content = data["choices"][0]["message"]["content"]
+
         return ChatResponse(
-            response=data["response"],
+            response=message_content,
             status="success",
             timestamp=datetime.now().isoformat()
         )
@@ -53,12 +74,13 @@ def chat(request: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
 
-# === TEST ROUTE ===
+# === HEALTH CHECK ROUTE ===
 @app.get("/")
 def root():
-    return {"message": "✅ Jarvis AI (Ollama) is running."}
+    return {"message": "✅ Rudra AI (Groq + Mistral) is live."}
 
 # === ENTRY POINT ===
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000)
+    print("🚀 Starting Rudra AI Assistant...")
+    uvicorn.run(app, host="0.0.0.0", port=8000)
