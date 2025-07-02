@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
@@ -9,15 +9,40 @@ import JarvisVoicePopup from './JarvisVoicePopup';
 import logo from './assets/logo.jpeg';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
+import GoogleLoginButton from './GoogleLoginButton';
 
 function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [showVoicePopup, setShowVoicePopup] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const GoogleClientId = "915570691665-ckl8ckr5e5hvqu2ir7br51j1sl9rqfdk.apps.googleusercontent.com";
-  const GoogleClientSecret = "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";
+  const [userDetails, setUserDetails] = useState(null);
 
+  const GoogleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+  const GoogleClientSecret = process.env.REACT_APP_GOOGLE_CLIENT_SECRET;
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+  console.log(API_BASE_URL);
+  
+  useEffect(() => {
+    const user_id = localStorage.getItem("user_id");
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+    if (user_id) {
+      axios.post(`${API_BASE_URL}/get-user`, {
+        user_id: String(user_id),
+      })
+        .then((response) => {
+          if (response.data.status === 'success') {
+            setUserDetails(response.data.user); // ✅ use React state
+          } else {
+            localStorage.removeItem("user_id");
+            console.error("Error fetching user:", response.data.message);
+          }
+        })
+        .catch((error) => {
+          console.error("API error:", error);
+        });
+    }
+  }, []);
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -25,8 +50,7 @@ function App() {
     setMessages((prev) => [...prev, userMessage]);
 
     try {
-      // const res = await axios.post("http://localhost:8000/chat", {
-      const res = await axios.post("http://3.110.223.90/backend/chat", {
+      const res = await axios.post(`${API_BASE_URL}/chat`, {
         message: input,
       });
 
@@ -54,8 +78,8 @@ function App() {
       {/* Main content area */}
       <div className="flex-grow-1" style={{ marginLeft: isSidebarOpen ? '250px' : '0', transition: 'margin-left 0.3s' }}>
         {/* Header or Top Navigation */}
-        <Header toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} />
-
+        <Header toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} userDetails={userDetails} />
+        <GoogleLoginButton setUserDetails={setUserDetails} />
         {/* Page content */}
         <main className="p-1 mt-4">
           <div className="chat">

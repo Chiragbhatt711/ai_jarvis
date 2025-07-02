@@ -11,6 +11,8 @@ const JarvisVoicePopup = ({ show, onHide }) => {
   const [message, setMessage] = useState('');
   const recognitionRef = useRef(null);
 
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
   // Setup speech recognition
   useEffect(() => {
     if (!('webkitSpeechRecognition' in window)) {
@@ -67,7 +69,7 @@ const JarvisVoicePopup = ({ show, onHide }) => {
 
   const getAIResponse = async (text) => {
     try {
-      const res = await axios.post("http://localhost:8000/chat", {
+      const res = await axios.post(`${API_BASE_URL}/chat`, {
         message: text,
       });
 
