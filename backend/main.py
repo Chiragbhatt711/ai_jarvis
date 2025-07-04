@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from psycopg2.extras import RealDictCursor
 from pydantic import BaseModel
 from datetime import datetime
 import requests
@@ -31,6 +32,8 @@ app.add_middleware(
 # === INPUT/OUTPUT MODELS ===
 class ChatRequest(BaseModel):
     message: str
+    user_id: str = None
+    chat_id: str = None
 
 class ChatResponse(BaseModel):
     response: str
@@ -52,6 +55,10 @@ def chat(request: ChatRequest):
             "Authorization": f"Bearer {GROQ_API_KEY}",
             "Content-Type": "application/json"
         }
+
+        if request.chat_id:
+            # Store user message in the database
+            store_chat_message(request.chat_id, request.user_id, request.message, is_from_user=True)
 
         payload = {
             "model": MODEL_NAME,
@@ -76,6 +83,10 @@ def chat(request: ChatRequest):
 
         data = response.json()
         message_content = data["choices"][0]["message"]["content"]
+
+        if request.chat_id:
+            # Store AI response in the database
+            store_chat_message(request.chat_id, request.user_id, message_content, is_from_user=False)
 
         return ChatResponse(
             response=message_content,
@@ -158,6 +169,63 @@ def save_google_user(google_data):
 
     return user_id
 
+def store_chat_message(chat_id="", user_id="", message="", is_from_user=False):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # 1. Check if chat exists
+    cursor.execute("SELECT * FROM chats WHERE chat_id = %s AND user_id = %s LIMIT 1", (chat_id, user_id))
+    chat = cursor.fetchone()
+
+    if chat:
+        message_chat_id = chat[0]
+    else:
+        headers = {
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json"
+        }
+
+        payload = {
+            "model": MODEL_NAME,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are Rudra GPT, an AI assistant created by Chirag Bhatt at Rudra Technovation. "
+                        "Answer all questions normally. Only mention Chirag Bhatt if the user asks who developed you or something similar."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": f"Generate a short title for this conversation: '{message}'"
+                }
+            ]
+        }
+
+        response = requests.post(GROQ_API_URL, headers=headers, json=payload)
+        if response.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Groq API error: {response.text}")
+
+        data = response.json()
+        chat_lable = data["choices"][0]["message"]["content"]
+
+        cursor.execute(
+            "INSERT INTO chats (chat_id, user_id, label) VALUES (%s, %s, %s) RETURNING id",
+            (chat_id, user_id, chat_lable)
+        )
+        message_chat_id = cursor.fetchone()[0]
+
+    # 2. Insert chat message
+    cursor.execute(
+        "INSERT INTO chat_messages (chat_id, message, is_from_user) VALUES (%s, %s, %s)",
+        (message_chat_id, message, is_from_user)
+    )
+
+    # Finalize
+    conn.commit()
+    cursor.close()
+    conn.close()
+
 @app.post("/get-user")
 def get_user(payload: UserRequest):
     user_id = payload.user_id
@@ -189,6 +257,35 @@ def get_user(payload: UserRequest):
             "message": "User not found",
             "timestamp": datetime.now().isoformat()
         }
+
+@app.get("/chat-lables/{user_id}")
+def get_chat_history(user_id: str):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+        cursor.execute(
+            "SELECT id, label, chat_id FROM chats WHERE user_id = %s ORDER BY id DESC",
+            (user_id,)
+        )
+        chats = cursor.fetchall()
+
+        return {
+            "status": "success",
+            "message": "User history successfully",
+            "timestamp": datetime.now().isoformat(),
+            "chats":chats
+        }
+
+    except Exception as e:
+        print("Error fetching chat history:", str(e))
+        raise HTTPException(status_code=500, detail="Database error")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 # === HEALTH CHECK ROUTE ===
 @app.get("/")
 def root():

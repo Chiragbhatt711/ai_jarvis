@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState,useEffect,useRef  } from 'react';
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
@@ -10,6 +10,8 @@ import logo from './assets/logo.jpeg';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import GoogleLoginButton from './GoogleLoginButton';
+import { BrowserRouter, Routes, Route, useParams, useNavigate } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -17,6 +19,12 @@ function App() {
   const [showVoicePopup, setShowVoicePopup] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [userDetails, setUserDetails] = useState(null);
+  const textareaRef = useRef();
+  const { chat_id } = useParams();
+  const navigate = useNavigate();
+  const [chatId, setChatId] = useState(chat_id || '');
+  console.log("Chat id:- "+chat_id);
+  
 
   const GoogleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
   const GoogleClientSecret = process.env.REACT_APP_GOOGLE_CLIENT_SECRET;
@@ -43,15 +51,35 @@ function App() {
         });
     }
   }, []);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [input]);
+
+  useEffect(() => {
+    if (!chat_id) {
+      const newChatId = uuidv4();
+      setChatId(newChatId);
+      navigate(`/c/${newChatId}`, { replace: true });
+    } else {
+      setChatId(chat_id);
+    }
+  }, [chat_id, navigate]);
   const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMessage = { from: "user", text: input };
+    const user_id = localStorage.getItem("user_id");
     setMessages((prev) => [...prev, userMessage]);
 
     try {
       const res = await axios.post(`${API_BASE_URL}/chat`, {
         message: input,
+        user_id: String(user_id),
+        chat_id: String(chatId),
       });
 
       const jarvisReply = {
@@ -130,13 +158,27 @@ function App() {
                   <span id="speak" className="me-2"></span>
 
                   {/* Input Field */}
-                  <input
-                    type="text"
-                    className="form-control rounded-pill me-2"
+                  <textarea
+                    ref={textareaRef}
+                    className="form-control me-2"
                     placeholder="Ask anything..."
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                    }}
+                    rows={1}
+                    style={{
+                      resize: 'none',
+                      borderRadius: '20px',
+                      padding: '10px 15px',
+                      minHeight: '45px',
+                      maxHeight: '150px',
+                      overflowY: 'auto',
+                    }}
                   />
 
                   {/* Send Button */}

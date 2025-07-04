@@ -84,9 +84,36 @@ const JarvisVoicePopup = ({ show, onHide }) => {
     }
   };
 
+  let selectedVoice = null;
+
+  const loadVoices = () => {
+    const voices = window.speechSynthesis.getVoices();
+    
+    selectedVoice = voices.find(v => v.name === "Google US English")
+                  || voices.find(v => v.name === "Microsoft Zira - English (United States)")
+                  || voices.find(v => v.name === "Google UK English Female")
+                  || voices.find(v => v.lang === "en-US");
+
+    if (!selectedVoice) {
+      console.warn("⚠️ No preferred voice found. Voices loaded:", voices.map(v => v.name));
+    } else {
+      console.log("✅ Selected voice:", selectedVoice.name);
+    }
+  };
+
+  // Attach listener for when voices are ready
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+
+  // Also try loading immediately (in case voices are already available)
+  loadVoices();
+
   const speakOutLoud = (text) => {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
+    utterance.voice = selectedVoice || window.speechSynthesis.getVoices()[0]; // Fallback to first available voice
+    console.log(selectedVoice);
+    
+     
 
     utterance.onend = () => {
       console.log("🗣️ Finished speaking, restarting listening...");
@@ -119,10 +146,10 @@ const JarvisVoicePopup = ({ show, onHide }) => {
 const styles = {
   popup: {
     position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100vw',
-    height: '100vh',
+    top: '63px',
+    left: '269px',
+    width: '78vw',
+    height: '84vh',
     overflow: 'hidden',
     zIndex: 9999,
   },
@@ -144,8 +171,8 @@ const styles = {
   },
   closeBtn: {
     position: 'absolute',
-    top: 53,
-    right: 20,
+    top: 0,
+    right: 0,
     padding: '10px 20px',
     border: 'none',
     background: '#fff',
