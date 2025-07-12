@@ -106,7 +106,7 @@ function App() {
       <Sidebar isOpen={isSidebarOpen} />
 
       {/* Main content area */}
-      <div className="flex-grow-1" style={{ marginLeft: isSidebarOpen ? '250px' : '0', transition: 'margin-left 0.3s' }}>
+      <div className="flex-grow-1" style={{ marginLeft: isSidebarOpen ? '223px' : '-25px', transition: 'margin-left 0.3s', marginRight:'-25px' }}>
         {/* Header or Top Navigation */}
         <Header toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} userDetails={userDetails} />
         <GoogleLoginButton setUserDetails={setUserDetails} />

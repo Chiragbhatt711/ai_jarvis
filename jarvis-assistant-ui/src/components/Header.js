@@ -13,11 +13,11 @@ export default function Header({ toggleSidebar, isSidebarOpen, userDetails }) {
             </button>
 
             {/* Brand Text */}
-            <span className="navbar-brand mb-0 h6">Welcome to Chirag's AI</span>
+            {/* <span className="navbar-brand mb-0 h6">Welcome to Chirag's AI</span> */}
 
             {userDetails && userDetails.name ? (
             <span className="navbar-text text-light">
-                Hello, {userDetails.name}!
+                Hey, {userDetails.name}!
             </span>
             ) : (
             <button className="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">
