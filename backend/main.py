@@ -59,7 +59,7 @@ def chat(request: ChatRequest):
             "Content-Type": "application/json"
         }
 
-        if request.chat_id and request.user_id:
+        if request.chat_id is not None and request.user_id is not None:
             # Store user message in the database
             store_chat_message(request.chat_id, request.user_id, request.message, is_from_user=True)
 
@@ -99,7 +99,7 @@ def chat(request: ChatRequest):
         data = response.json()
         message_content = data["choices"][0]["message"]["content"]
 
-        if request.chat_id and request.user_id:
+        if request.chat_id is not None and request.user_id is not None:
             # Store AI response in the database
             store_chat_message(request.chat_id, request.user_id, message_content, is_from_user=False)
 
