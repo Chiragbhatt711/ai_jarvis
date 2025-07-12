@@ -34,8 +34,8 @@ app.add_middleware(
 class ChatRequest(BaseModel):
     message: str
     web_search: bool = False
-    user_id: str = None
-    chat_id: str = None
+    user_id: str = ''
+    chat_id: str = ''
 
 class ChatResponse(BaseModel):
     response: str
@@ -59,7 +59,7 @@ def chat(request: ChatRequest):
             "Content-Type": "application/json"
         }
 
-        if request.chat_id is not None and request.user_id is not None:
+        if request.chat_id != "null" and request.user_id != "null":
             # Store user message in the database
             store_chat_message(request.chat_id, request.user_id, request.message, is_from_user=True)
 
