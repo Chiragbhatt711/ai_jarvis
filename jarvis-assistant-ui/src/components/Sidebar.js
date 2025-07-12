@@ -66,11 +66,12 @@ export default function Sidebar({ isOpen }) {
           <i className="bi bi-chat-left-text me-2"></i> New chat
         </button>
       </div>
+      <hr className="text-white" />
 
       {/* Recent Chats */}
       <div className="nav nav-pills flex-column mb-auto mt-1"> 
         <label className="text-white mb-2">Recent Chats</label>
-        <ul className="list-unstyled scroll-container" style={{ maxHeight: "318px", overflowY: "auto" }}>
+        <ul className="list-unstyled scroll-container" style={{ maxHeight: "318px", overflowY: "auto",fontSize: "xx-small" }}>
           {chatHistory.length > 0 ? (
             chatHistory.map((chat) => (
               <li key={chat.id}>

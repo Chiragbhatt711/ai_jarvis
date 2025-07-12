@@ -9,6 +9,7 @@ import requests
 from db import get_connection
 import os
 from dotenv import load_dotenv
+from bs4 import BeautifulSoup
 
 load_dotenv()
 
@@ -32,6 +33,7 @@ app.add_middleware(
 # === INPUT/OUTPUT MODELS ===
 class ChatRequest(BaseModel):
     message: str
+    web_search: bool = False
     user_id: str = None
     chat_id: str = None
 
@@ -51,6 +53,7 @@ class UserRequest(BaseModel):
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
     try:
+        user_content_for_api = request.message
         headers = {
             "Authorization": f"Bearer {GROQ_API_KEY}",
             "Content-Type": "application/json"
@@ -60,6 +63,17 @@ def chat(request: ChatRequest):
             # Store user message in the database
             store_chat_message(request.chat_id, request.user_id, request.message, is_from_user=True)
 
+        if request.web_search:
+            web_results = wen_search(request.message)
+            if web_results:
+                search_content = format_search_results(web_results)
+
+                user_content_for_api = f"""Question: {request.message}
+                                        I found these web results:
+                                        {search_content}
+                                        Now answer the question using the results above.
+                                        """
+
         payload = {
             "model": MODEL_NAME,
             "messages": [
@@ -67,12 +81,13 @@ def chat(request: ChatRequest):
                     "role": "system",
                     "content": (
                         "You are Rudra GPT, an AI assistant created by Chirag Bhatt at Rudra Technovation. "
+                        "You can also search the web to find real-time information when needed. "
                         "Answer all questions normally. Only mention Chirag Bhatt if the user asks who developed you or something similar."
                     )
                 },
                 {
                     "role": "user",
-                    "content": request.message
+                    "content": user_content_for_api
                 }
             ]
         }
@@ -98,6 +113,26 @@ def chat(request: ChatRequest):
         print(f"Error in chat endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
 
+def wen_search(query):
+    url = "https://html.duckduckgo.com/html/"
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
+    res = requests.post(url, headers=headers, data={'q': query})
+    soup = BeautifulSoup(res.text, 'html.parser')
+    results = []
+
+    for a in soup.select('.result__a'):
+        results.append({
+            'title': a.text.strip(),
+            'link': a['href']
+        })
+    return results
+
+def format_search_results(results):
+    return "\n".join(
+        [f"{i+1}. {r['title']}\n{r['link']}" for i, r in enumerate(results)]
+    )
 # === GOOGLE AUTHENTICAT ROUTE ===
 @app.post("/google-verify-token")
 def verify_google_token(data: TokenData):

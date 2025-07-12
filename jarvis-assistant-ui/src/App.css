@@ -55,7 +55,7 @@ body {
 }
 
 .conversation {
-  height: calc(93% - 12px);
+  height: calc(80% - 12px);
   position: relative;
   /* background-image: url("../public/images/jarivs.gif");     */
   background-color: black;
@@ -317,10 +317,10 @@ cursor: pointer;
   }
 
   .conversation {
-    height: calc(93vh - 55px);
+    height: calc(80vh - 55px);
   }
   .conversation .conversation-container {
-    height: calc(93vh - 120px);
+    height: calc(88vh - 120px);
   }
 
 .forword{
@@ -374,6 +374,16 @@ main {
 .markdown-response code {
   font-family: 'Courier New', Courier, monospace;
   color: #fffbf0;
+}
+
+.markdown-response ol {
+  padding-left: 20px;
+  list-style-type: decimal;
+  margin-bottom: 1rem;
+}
+
+.markdown-response li {
+  margin-bottom: 6px;
 }
 
 /* src/App.css */
