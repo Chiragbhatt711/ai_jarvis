@@ -4,7 +4,7 @@ import logo from '../assets/logo.jpeg';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-export default function Sidebar({ isOpen }) {
+export default function Sidebar({ isOpen,userDetails, onLogout }) {
   const [chatHistory, setChatHistory] = useState([]);
   const navigate = useNavigate();
   const user_id = localStorage.getItem("user_id");
@@ -39,7 +39,17 @@ export default function Sidebar({ isOpen }) {
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate('/login');
+    onLogout();
+    setChatHistory([]);
+    navigate('/c');
+    window.Swal.fire({ 
+      toast: true,
+      icon: 'success',
+      title: 'Logged out successfully!',
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000
+    });
   };
 
   return (
@@ -93,12 +103,19 @@ export default function Sidebar({ isOpen }) {
       {/* Footer: Settings + Logout */}
       <div className="mt-auto">
         <hr className="text-white" />
-        <a href="#" className="btn btn-secondary mb-2 text-white d-flex align-items-center">
+        {/* <a href="#" className="btn btn-secondary mb-2 text-white d-flex align-items-center">
           <i className="bi bi-gear me-2"></i> Settings
-        </a>
-        <a href="#" className="nav-link text-white" onClick={handleLogout}>
-          <i className="bi bi-box-arrow-right me-2"></i> Logout
-        </a>
+        </a> */}
+        { user_id ? (
+          <a href="#" className="nav-link text-white" onClick={handleLogout}>
+            <i className="bi bi-box-arrow-right me-2"></i> Logout
+          </a>
+          ) : (
+            <a href='#' className="nav-link text-white" data-bs-toggle="modal" data-bs-target="#loginModal">
+                Login
+            </a>
+          )
+        }
       </div>
     </div>
   );

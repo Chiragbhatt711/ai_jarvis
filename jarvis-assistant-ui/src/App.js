@@ -103,7 +103,7 @@ function App() {
   return (
     <div className="d-flex">
       {/* Left Sidebar */}
-      <Sidebar isOpen={isSidebarOpen} />
+      <Sidebar isOpen={isSidebarOpen} userDetails={userDetails} onLogout={() => setUserDetails(null)} />
 
       {/* Main content area */}
       <div className="flex-grow-1" style={{ marginLeft: isSidebarOpen ? '223px' : '-25px', transition: 'margin-left 0.3s', marginRight:'-25px' }}>
