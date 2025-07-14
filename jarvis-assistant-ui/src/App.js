@@ -201,7 +201,7 @@ function App() {
                   </div>
 
                   {/* Mic Button */}
-                  <button
+                  {/* <button
                     id="speak"
                     type="button"
                     className="btn btn-secondary d-flex align-items-center justify-content-center p-0"
@@ -223,29 +223,27 @@ function App() {
                       <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5" />
                       <path d="M10 8a2 2 0 1 1-4 0V3a2 2 0 1 1 4 0zM8 0a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V3a3 3 0 0 0-3-3" />
                     </svg>
-                  </button>
+                  </button> */}
 
                   {/* Send Button */}
                   <button
                     type="button"
                     onClick={handleSend}
                     className="btn btn-primary d-flex align-items-center justify-content-center p-0"
+                    title="Send"
                     style={{
                       width: '40px',
                       height: '40px',
                       borderRadius: '50%',
                     }}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
+                    <svg xmlns="http://www.w3.org/2000/svg"
                       width="18"
                       height="18"
                       fill="white"
                       className="bi bi-send"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576zm6.787-8.201L1.591 6.602l4.339 2.76z" />
-                    </svg>
+                      viewBox="0 0 384 512">
+                    <path d="M214.6 41.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 141.2 160 448c0 17.7 14.3 32 32 32s32-14.3 32-32l0-306.7L329.4 246.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-160-160z"/></svg>
                   </button>
                 </div>
 
