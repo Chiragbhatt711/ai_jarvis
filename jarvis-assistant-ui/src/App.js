@@ -20,6 +20,7 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [userDetails, setUserDetails] = useState(null);
   const [isWebSearchEnabled, setIsWebSearchEnabled] = useState(false);
+  const [showTools, setShowTools] = useState(false);
   const textareaRef = useRef();
   const { chat_id } = useParams();
   const navigate = useNavigate();
@@ -100,70 +101,155 @@ function App() {
     setInput("");
   };
 
-  return (
-    <div className="d-flex">
-      {/* Left Sidebar */}
-      <Sidebar isOpen={isSidebarOpen} userDetails={userDetails} onLogout={() => setUserDetails(null)} />
+    const [inputValue, setInputValue] = useState('');
+    const chatContainerRef = useRef(null);
+    const welcomeMessageRef = useRef(null);
+    const handleSendMessage = (e) => {
+        e.preventDefault();
+        const message = inputValue.trim();
+        if (!message) return;
+        if (welcomeMessageRef.current) {
+            welcomeMessageRef.current.style.display = 'none';
+        }
+          appendMessage(message, 'user');
+        setInputValue('');
+        setTimeout(() => {
+            const botResponse = 'This is a simulated 2025 response. The UI has been updated to reflect the latest design trends, including a consolidated tools menu and a more polished aesthetic. Full functionality requires a backend connection.';
+            appendMessage(botResponse, 'bot');
+        }, 1200);
+    };
+    const appendMessage = (text, sender) => {
+        setMessages((prevMessages) => [...prevMessages, { text, sender }]);
+        setTimeout(() => {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }, 0);
+    };
+    const autoResizeTextarea = (e) => {
+        const textarea = e.target;
+        textarea.style.height = 'auto';
+        const maxHeight = 200;
+        const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+        textarea.style.height = `${newHeight}px`;
+    };
 
-      {/* Main content area */}
-      <div className="flex-grow-1" style={{ marginLeft: isSidebarOpen ? '223px' : '-25px', transition: 'margin-left 0.3s', marginRight:'-25px' }}>
-        {/* Header or Top Navigation */}
+  return (
+    <div class="flex h-screen">
+      <Sidebar isOpen={isSidebarOpen} userDetails={userDetails} onLogout={() => setUserDetails(null)} />
+      <main className="flex-1 flex flex-col relative bg-[#1C1C1C]">
         <Header toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} userDetails={userDetails} />
-        <GoogleLoginButton setUserDetails={setUserDetails} />
-        {/* Page content */}
-        <main className="p-1 mt-4">
-          <div className="chat">
-            <div className="chat-container">
-              <div id="call" className="user-bar"></div>
-              <div className="conversation">
-                <div className="conversation-container">
-                  <span id="ap">
-                    {messages.map((msg, idx) => (
-                      <div key={idx} className={`message ${msg.from === 'user' ? 'user' : ''}`}>
-                        {msg.from === "jarvis" ? (
-                          <div className="d-flex align-items-start mb-2">
-                            <div className="me-2">
-                              <img
-                                src={logo}
-                                alt="Jarvis"
-                                className="rounded-circle"
-                                style={{ width: '34px', height: '31px', marginTop: '-6px', marginLeft: '-18px' }}
-                              />
-                            </div>
-                            <div className="markdown-response">
-                              <ReactMarkdown
-                                children={msg.text}
-                                remarkPlugins={[remarkGfm]}
-                                rehypePlugins={[rehypeHighlight]}
-                                components={{
-                                  pre: ({ node, ...props }) => (
-                                    <pre style={{ background: '#1e1e1e', padding: '12px', borderRadius: '8px', overflowX: 'auto' }} {...props} />
-                                  ),
-                                  code: ({ node, inline, className, children, ...props }) => (
-                                    <code style={{ fontFamily: 'monospace', fontSize: '0.9rem' }} {...props}>
-                                      {children}
-                                    </code>
-                                  ),
-                                }}
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          msg.text
-                        )}
+        
+        {/* Chat messages */}
+        <div id="chat-container" className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar">
+          <div className="max-w-4xl mx-auto">
+            {!messages.length ? (
+              <div id="welcome-message" className="text-center py-20">
+                <div className="inline-block bg-white/10 rounded-full p-3 mb-6 shadow-lg">
+                  <svg className="w-10 h-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="..." />
+                  </svg>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold text-white">How can I help you today?</h2>
+              </div>
+            ) : (
+              messages.map((msg, idx) => (
+                <div key={idx} className={`mb-4 ${msg.from === 'user' ? 'text-right text-white' : 'text-left text-white'}`}>
+                  {msg.from === 'jarvis' ? (
+                    <div className="flex items-start gap-2">
+                      <img src={logo} alt="Jarvis" className="w-8 h-8 rounded-full" />
+                      <div className="markdown-response text-sm md:text-base">
+                        <ReactMarkdown
+                          children={msg.text}
+                          remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[rehypeHighlight]}
+                          components={{
+                            pre: ({ node, ...props }) => (
+                              <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-x-auto" {...props} />
+                            ),
+                            code: ({ inline, className, children, ...props }) => (
+                              <code className="font-mono text-sm" {...props}>
+                                {children}
+                              </code>
+                            ),
+                          }}
+                        />
                       </div>
-                    ))}
-                  </span>
+                    </div>
+                  ) : (
+                    <div className="inline-block bg-blue-600 rounded-xl px-4 py-2 text-white max-w-sm">{msg.text}</div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Input Section */}
+        <div className="w-full bg-gradient-to-t from-black/50 to-transparent pt-4">
+          <div className="max-w-4xl mx-auto px-4">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSend();
+              }}
+              className="flex items-center gap-2 relative"
+            >
+              {/* Toggle Tools */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowTools((prev) => !prev)}
+                  className="p-3 bg-[#2a2a2a] border border-white/10 rounded-xl hover:bg-white/10"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                </button>
+
+                {/* Tools Popup */}
+                <div
+                  id="tools-popup"
+                  className={`absolute bottom-full mb-3 w-[300px] md:w-[400px] bg-[#2a2a2a] rounded-xl shadow-2xl p-2 transition-all duration-200 ${
+                    showTools ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'
+                  }`}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 text-left text-white w-full">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-6 h-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="1.5"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M2.25 15.75l5.159-5.159..."
+                        />
+                      </svg>
+                      <div>
+                        <p className="font-semibold">Create an image</p>
+                        <p className="text-xs text-gray-400">Generate an image with DALL-E</p>
+                      </div>
+                    </button>
+                    {/* Add more buttons here... */}
+                  </div>
                 </div>
               </div>
-              <div id="form" className="input-group d-flex flex-column" style={{ backgroundColor:'white',borderRadius: '20px', padding: '10px',top:'-5px' }}>
-                {/* Speak Icon Placeholder */}
-                <span id="speak" className="me-2"></span>
 
-                {/* Input Field */}
+              {/* Input Field */}
+              <div className="w-full relative">
                 <textarea
                   ref={textareaRef}
-                  className="form-control"
+                  rows={1}
+                  className="w-full bg-[#2a2a2a] border border-white/10 rounded-xl shadow-lg py-3.5 pl-4 pr-14 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 custom-scrollbar"
                   placeholder="Ask anything..."
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -173,93 +259,36 @@ function App() {
                       handleSend();
                     }
                   }}
-                  rows={1}
-                  style={{
-                    resize: 'none',
-                    borderRadius: '20px',
-                    padding: '10px 15px',
-                    minHeight: '45px',
-                    maxHeight: '150px',
-                    overflowY: 'auto',
-                    width: '100%',
-                  }}
                 />
-
-                {/* Buttons Row */}
-                <div className="d-flex justify-content-end mt-2 gap-2">
-                  <div className="me-auto" style={{ cursor: 'pointer' }} onClick={() => setIsWebSearchEnabled(prev => !prev)}>
-                    <span className="d-flex align-items-center text-secondary fw-medium mt-2" style={{ marginLeft: '15px' }}>
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16"
-                        height="16"
-                        fill={isWebSearchEnabled ? "#0d6efd" : "gray"}
-                        className="bi bi-globe2 me-1">
-                        <path d="M57.7 193l9.4 16.4c8.3 14.5 21.9 25.2 38 29.8L163 255.7c17.2 4.9 29 20.6 29 38.5l0 39.9c0 11 6.2 21 16 25.9s16 14.9 16 25.9l0 39c0 15.6 14.9 26.9 29.9 22.6c16.1-4.6 28.6-17.5 32.7-33.8l2.8-11.2c4.2-16.9 15.2-31.4 30.3-40l8.1-4.6c15-8.5 24.2-24.5 24.2-41.7l0-8.3c0-12.7-5.1-24.9-14.1-33.9l-3.9-3.9c-9-9-21.2-14.1-33.9-14.1L257 256c-11.1 0-22.1-2.9-31.8-8.4l-34.5-19.7c-4.3-2.5-7.6-6.5-9.2-11.2c-3.2-9.6 1.1-20 10.2-24.5l5.9-3c6.6-3.3 14.3-3.9 21.3-1.5l23.2 7.7c8.2 2.7 17.2-.4 21.9-7.5c4.7-7 4.2-16.3-1.2-22.8l-13.6-16.3c-10-12-9.9-29.5 .3-41.3l15.7-18.3c8.8-10.3 10.2-25 3.5-36.7l-2.4-4.2c-3.5-.2-6.9-.3-10.4-.3C163.1 48 84.4 108.9 57.7 193zM464 256c0-36.8-9.6-71.4-26.4-101.5L412 164.8c-15.7 6.3-23.8 23.8-18.5 39.8l16.9 50.7c3.5 10.4 12 18.3 22.6 20.9l29.1 7.3c1.2-9 1.8-18.2 1.8-27.5zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z"/>
-                      </svg>
-                      
-                      <span style={{ color: isWebSearchEnabled ? "#0d6efd" : "gray" }}>Web Search</span>
-                    </span>
-                  </div>
-
-                  {/* Mic Button */}
-                  {/* <button
-                    id="speak"
-                    type="button"
-                    className="btn btn-secondary d-flex align-items-center justify-content-center p-0"
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                    }}
-                    onClick={() => setShowVoicePopup(true)}
+                <button
+                  type="submit"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      fill="white"
-                      className="bi bi-mic"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5" />
-                      <path d="M10 8a2 2 0 1 1-4 0V3a2 2 0 1 1 4 0zM8 0a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V3a3 3 0 0 0-3-3" />
-                    </svg>
-                  </button> */}
-
-                  {/* Send Button */}
-                  <button
-                    type="button"
-                    onClick={handleSend}
-                    className="btn btn-primary d-flex align-items-center justify-content-center p-0"
-                    title="Send"
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                    }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      fill="white"
-                      className="bi bi-send"
-                      viewBox="0 0 384 512">
-                    <path d="M214.6 41.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 141.2 160 448c0 17.7 14.3 32 32 32s32-14.3 32-32l0-306.7L329.4 246.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-160-160z"/></svg>
-                  </button>
-                </div>
-
-                {/* Voice Popup Component */}
-                {showVoicePopup && (
-                  <JarvisVoicePopup
-                    show={showVoicePopup}
-                    onHide={() => setShowVoicePopup(false)}
-                  />
-                )}
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
-            </div>
+            </form>
+
+            <p className="text-xs text-center text-gray-600 pt-3 pb-3">
+              RudraGPT can make mistakes. Consider checking important information.
+            </p>
           </div>
-        </main>
-      </div>
+        </div>
+
+        {/* Voice popup (optional) */}
+        {showVoicePopup && (
+          <JarvisVoicePopup show={showVoicePopup} onHide={() => setShowVoicePopup(false)} />
+        )}
+      </main>
     </div>
+
   );
 }
 
