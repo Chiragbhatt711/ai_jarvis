@@ -21,6 +21,7 @@ function App() {
   const [userDetails, setUserDetails] = useState(null);
   const [isWebSearchEnabled, setIsWebSearchEnabled] = useState(false);
   const [showTools, setShowTools] = useState(false);
+  const toggleRef = useRef(null);
   const textareaRef = useRef();
   const { chat_id } = useParams();
   const navigate = useNavigate();
@@ -126,15 +127,23 @@ function App() {
     };
     const autoResizeTextarea = (e) => {
         const textarea = e.target;
-        textarea.style.height = 'auto';
-        const maxHeight = 200;
-        const newHeight = Math.min(textarea.scrollHeight, maxHeight);
-        textarea.style.height = `${newHeight}px`;
+        textarea.style.height = 'auto'; // reset height
+        textarea.style.height = `${textarea.scrollHeight}px`;
     };
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (toggleRef.current && !toggleRef.current.contains(event.target)) {
+          setShowTools(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
   return (
     <div class="flex h-screen">
-      <Sidebar isOpen={isSidebarOpen} userDetails={userDetails} onLogout={() => setUserDetails(null)} />
+      <Sidebar isOpen={isSidebarOpen} userDetails={userDetails} setUserDetails={setUserDetails} onLogout={() => setUserDetails(null)} />
       <main className="flex-1 flex flex-col relative bg-[#1C1C1C]">
         <Header toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} userDetails={userDetails} />
         
@@ -185,24 +194,25 @@ function App() {
 
         {/* Input Section */}
         <div className="w-full bg-gradient-to-t from-black/50 to-transparent pt-4">
-          <div className="max-w-4xl mx-auto px-4">
+          <div className="max-w-4xl mx-auto px-4" ref={toggleRef}>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 handleSend();
               }}
-              className="flex items-center gap-2 relative"
+              className="flex items-end gap-2 relative"
             >
-              {/* Toggle Tools */}
+              {/* Toggle Button */}
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => setShowTools((prev) => !prev)}
-                  className="p-3 bg-[#2a2a2a] border border-white/10 rounded-xl hover:bg-white/10"
+                  onClick={() => setShowTools(prev => !prev)}
+                  className="p-2 bg-[#2a2a2a] border border-white/10 rounded-lg hover:bg-white/10 transition"
+                  style={{ marginBottom: '7px', height: '50px' }}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="w-6 h-6 text-white"
+                    className="w-5 h-5 text-white"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -211,48 +221,56 @@ function App() {
                   </svg>
                 </button>
 
-                {/* Tools Popup */}
+                {/* Tools Dropdown */}
                 <div
-                  id="tools-popup"
-                  className={`absolute bottom-full mb-3 w-[300px] md:w-[400px] bg-[#2a2a2a] rounded-xl shadow-2xl p-2 transition-all duration-200 ${
+                  className={`absolute bottom-full left-0 mb-2 w-64 bg-[#2a2a2a] rounded-xl shadow-xl p-2 transition-all duration-200 ${
                     showTools ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'
                   }`}
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 text-left text-white w-full">
+                  <div className="flex flex-col gap-1">
+                    {/* Web Search Tool */}
+                    <button
+                      onClick={() => setIsWebSearchEnabled(prev => !prev)}
+                      className={`flex items-start gap-2 p-2 rounded-md text-white text-left transition ${
+                        isWebSearchEnabled ? 'bg-white/10 border border-white/20' : 'hover:bg-white/10'
+                      }`}
+                    >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="w-6 h-6"
+                        className="w-5 h-5 mt-1"
                         fill="none"
                         viewBox="0 0 24 24"
-                        strokeWidth="1.5"
                         stroke="currentColor"
                       >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          d="M2.25 15.75l5.159-5.159..."
+                          d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z"
                         />
                       </svg>
                       <div>
-                        <p className="font-semibold">Create an image</p>
-                        <p className="text-xs text-gray-400">Generate an image with DALL-E</p>
+                        <p className="font-medium text-sm">Web Search</p>
+                        <p className="text-xs text-gray-400">
+                          {isWebSearchEnabled ? 'Web search is enabled' : 'Enable internet results'}
+                        </p>
                       </div>
                     </button>
-                    {/* Add more buttons here... */}
                   </div>
                 </div>
               </div>
 
-              {/* Input Field */}
-              <div className="w-full relative">
+              {/* Textarea with Send */}
+              <div className="flex-1 relative">
                 <textarea
                   ref={textareaRef}
                   rows={1}
-                  className="w-full bg-[#2a2a2a] border border-white/10 rounded-xl shadow-lg py-3.5 pl-4 pr-14 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 custom-scrollbar"
+                  className="w-full resize-none overflow-hidden max-h-52 bg-[#2a2a2a] border border-white/10 rounded-xl shadow-lg py-3.5 pl-4 pr-12 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 custom-scrollbar transition-all"
                   placeholder="Ask anything..."
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    autoResizeTextarea(e);
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
@@ -262,10 +280,10 @@ function App() {
                 />
                 <button
                   type="submit"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <svg
-                    className="w-6 h-6 text-white"
+                    className="w-5 h-5 text-white"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -281,6 +299,7 @@ function App() {
             </p>
           </div>
         </div>
+
 
         {/* Voice popup (optional) */}
         {showVoicePopup && (

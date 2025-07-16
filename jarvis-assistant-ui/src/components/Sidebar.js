@@ -1,14 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import logo from '../assets/logo.jpeg';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import GoogleLoginButton from '../GoogleLoginButton';
 
-export default function Sidebar({ isOpen, userDetails, onLogout }) {
+export default function Sidebar({ isOpen, userDetails, setUserDetails, onLogout }) {
   const [chatHistory, setChatHistory] = useState([]);
   const navigate = useNavigate();
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const user_id = userDetails?.id;
+  const [showDropdown, setShowDropdown] = useState(false);
+  const profileRef = useRef();
 
   // Fetch chat history when user logs in
   useEffect(() => {
@@ -21,7 +23,7 @@ export default function Sidebar({ isOpen, userDetails, onLogout }) {
       }
     };
 
-    if (user_id) {
+    if (userDetails && userDetails.id) {
       fetchChats();
     }
   }, [userDetails]);
@@ -48,6 +50,23 @@ export default function Sidebar({ isOpen, userDetails, onLogout }) {
       timer: 3000
     });
   };
+
+  const stripMarkdown = (text) => {
+    return text
+      .replace(/[#_*~`>[\]()]/g, '')  // remove markdown symbols
+      .replace(/!\[.*?\]\(.*?\)/g, '') // remove images
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1'); // convert [text](link) to text
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <aside
@@ -87,21 +106,23 @@ export default function Sidebar({ isOpen, userDetails, onLogout }) {
       </button>
 
       {/* Recent Chats */}
-      <div className="flex-grow overflow-y-auto custom-scrollbar -mr-2 pr-2">
+      <div className="flex-grow -mr-2 pr-2">
         <h3 className="px-1 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
           Recent Chats
         </h3>
+
         {chatHistory.length > 0 ? (
-          <nav className="flex flex-col gap-1">
+          <nav className="flex flex-col gap-1 overflow-y-auto max-h-[300px] custom-scrollbar pr-1">
             {chatHistory.map((chat) => (
-              <a
+              <button
                 key={chat.id}
-                href="#"
-                className="px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-white/5 text-white truncate"
                 onClick={() => handleSelectChat(chat.chat_id)}
+                className="group flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-white bg-white/5 hover:bg-white/10 transition w-full text-left"
+                title={chat.label}
               >
-                <i className="bi bi-chat-left-text me-2"></i> {chat.label}
-              </a>
+                <i className="bi bi-chat-left-text text-blue-400 group-hover:text-blue-300"></i>
+                <span className="truncate flex-1">{stripMarkdown(chat.label)}</span>
+              </button>
             ))}
           </nav>
         ) : (
@@ -110,27 +131,45 @@ export default function Sidebar({ isOpen, userDetails, onLogout }) {
       </div>
 
       {/* Footer Section */}
-      <div className="border-t border-white/10 pt-4 mt-4">
+      <div className="border-t border-white/10 pt-1 mt-1">
         {userDetails ? (
           <>
-            {/* Optional: User Info */}
-            <div className="flex items-center gap-3 px-3 py-2 text-white text-sm mb-2">
-              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold">
-                {userDetails.name?.[0]?.toUpperCase() || 'U'}
-              </div>
-              <span className="truncate">{userDetails.name}</span>
-            </div>
-
-            {/* Logout Button */}
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 p-3 rounded-lg text-sm font-medium hover:bg-white/5 text-white transition"
+            <div
+              ref={profileRef}
+              className="relative px-3 py-2 mb-2 cursor-pointer"
+              onClick={() => setShowDropdown(!showDropdown)}
             >
-              <i className="bi bi-box-arrow-right"></i> Logout
-            </button>
+              <div className="flex items-center gap-3 text-white text-sm">
+                {userDetails.profile_picture ? (
+                  <img
+                    src={userDetails.profile_picture}
+                    alt="User Avatar"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold">
+                    {userDetails.name?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                )}
+                <span className="truncate">{userDetails.name}</span>
+                <i className="bi bi-chevron-down text-white/70 text-xs"></i>
+              </div>
+
+              {/* Dropdown */}
+              {showDropdown && (
+                <div className="absolute left-3 right-3 mt-2 bg-black border border-white/10 rounded-lg shadow-lg z-10">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 rounded-b-lg"
+                  >
+                    <i className="bi bi-box-arrow-right mr-2"></i> Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </>
         ) : (
-          <GoogleLoginButton />
+          <GoogleLoginButton setUserDetails={setUserDetails} />
         )}
       </div>
     </aside>

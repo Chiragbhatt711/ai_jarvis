@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
 import axios from 'axios';
+import { BrowserRouter, Routes, Route, useParams, useNavigate } from 'react-router-dom';
 
 const GoogleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 const GoogleClientSecret = process.env.REACT_APP_GOOGLE_CLIENT_SECRET;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function GoogleLoginButton({ setUserDetails }) {
+  const navigate = useNavigate();
   useEffect(() => {
     /* global google */
     window.google.accounts.id.initialize({
