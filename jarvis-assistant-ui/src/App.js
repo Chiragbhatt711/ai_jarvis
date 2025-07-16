@@ -161,7 +161,7 @@ function App() {
               </div>
             ) : (
               messages.map((msg, idx) => (
-                <div key={idx} className={`mb-4 ${msg.from === 'user' ? 'text-right text-white' : 'text-left text-white'}`}>
+                <div key={idx} className={`mb-4 ${msg.from === 'user' ? 'text-right' : 'text-left'} text-white`}>
                   {msg.from === 'jarvis' ? (
                     <div className="flex items-start gap-2">
                       <img src={logo} alt="Jarvis" className="w-8 h-8 rounded-full" />
@@ -184,7 +184,23 @@ function App() {
                       </div>
                     </div>
                   ) : (
-                    <div className="inline-block bg-blue-600 rounded-xl px-4 py-2 text-white max-w-sm">{msg.text}</div>
+                    <div className="inline-block bg-blue-600 rounded-xl px-4 py-2 text-white max-w-sm text-left">
+                      <ReactMarkdown
+                        children={msg.text}
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeHighlight]}
+                        components={{
+                          pre: ({ node, ...props }) => (
+                            <pre className="bg-gray-800 text-white p-2 rounded-md overflow-x-auto" {...props} />
+                          ),
+                          code: ({ inline, className, children, ...props }) => (
+                            <code className="font-mono text-sm" {...props}>
+                              {children}
+                            </code>
+                          ),
+                        }}
+                      />
+                    </div>
                   )}
                 </div>
               ))
