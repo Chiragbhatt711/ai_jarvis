@@ -10,6 +10,7 @@ from db import get_connection
 import os
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
+from typing import List, Optional
 
 load_dotenv()
 
@@ -48,6 +49,8 @@ class TokenData(BaseModel):
 
 class UserRequest(BaseModel):
     user_id: str
+
+
 
 # === MAIN CHAT ROUTE ===
 @app.post("/chat", response_model=ChatResponse)
@@ -253,7 +256,7 @@ def store_chat_message(chat_id="", user_id="", message="", is_from_user=False):
     # 2. Insert chat message
     cursor.execute(
         "INSERT INTO chat_messages (chat_id, message, is_from_user) VALUES (%s, %s, %s)",
-        (message_chat_id, message, is_from_user)
+        (chat_id, message, is_from_user)
     )
 
     # Finalize
@@ -321,6 +324,38 @@ def get_chat_history(user_id: str):
         if conn:
             conn.close()
 
+
+class ChatMessage(BaseModel):
+    text: str
+    from_: str
+    created_at: Optional[str] = None
+
+@app.get("/chats/{chat_id}/messages")
+def get_chat_messages(chat_id: str):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+  
+    # Step 2: Get all messages from chat_messages table
+    cursor.execute("""
+        SELECT message, is_from_user, created_at
+        FROM chat_messages
+        WHERE chat_id = %s
+        ORDER BY created_at ASC
+    """, (chat_id,))
+    messages = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return [
+        ChatMessage(
+            text=row[0],
+            from_="user" if row[1] else "jarvis",
+            created_at=row[2].isoformat() if row[2] else None
+        )
+        for row in messages
+    ]
 # === HEALTH CHECK ROUTE ===
 @app.get("/")
 def root():

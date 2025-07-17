@@ -141,6 +141,20 @@ function App() {
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    useEffect(() => {
+      if (!chatId) return;
+
+      axios.get(`${API_BASE_URL}/chats/${chatId}/messages`)
+        .then(response => {
+          console.log(response);
+          
+          setMessages(response.data);
+        })
+        .catch(error => {
+          console.error("Failed to load chat messages:", error);
+        });
+    }, [chatId]);
+
   return (
     <div class="flex h-screen">
       <Sidebar isOpen={isSidebarOpen} userDetails={userDetails} setUserDetails={setUserDetails} onLogout={() => setUserDetails(null)} />
@@ -161,8 +175,8 @@ function App() {
               </div>
             ) : (
               messages.map((msg, idx) => (
-                <div key={idx} className={`mb-4 ${msg.from === 'user' ? 'text-right' : 'text-left'} text-white`}>
-                  {msg.from === 'jarvis' ? (
+                <div key={idx} className={`mb-4 ${msg.from_ === 'user' ? 'text-right' : 'text-left'} text-white`}>
+                  {msg.from === 'jarvis' || msg.from_ === 'jarvis' ? (
                     <div className="flex items-start gap-2">
                       <img src={logo} alt="Jarvis" className="w-8 h-8 rounded-full" />
                       <div className="markdown-response text-sm md:text-base">
