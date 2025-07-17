@@ -175,7 +175,7 @@ function App() {
               </div>
             ) : (
               messages.map((msg, idx) => (
-                <div key={idx} className={`mb-4 ${msg.from_ === 'user' ? 'text-right' : 'text-left'} text-white`}>
+                <div key={idx} className={`mb-4 ${msg.from === 'user' || msg.from_ === 'user' ? 'text-right' : 'text-left'} text-white`}>
                   {msg.from === 'jarvis' || msg.from_ === 'jarvis' ? (
                     <div className="flex items-start gap-2">
                       <img src={logo} alt="Jarvis" className="w-8 h-8 rounded-full" />
