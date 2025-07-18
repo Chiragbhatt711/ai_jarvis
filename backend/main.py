@@ -224,7 +224,7 @@ def store_chat_message(chat_id="", user_id="", message="", is_from_user=False):
         }
 
         payload = {
-            "model": MODEL_NAME,
+            "model": "mistral-saba-24b",
             "messages": [
                 {
                     "role": "system",
