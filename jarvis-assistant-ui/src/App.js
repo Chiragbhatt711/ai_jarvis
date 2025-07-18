@@ -17,7 +17,7 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [showVoicePopup, setShowVoicePopup] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userDetails, setUserDetails] = useState(null);
   const [isWebSearchEnabled, setIsWebSearchEnabled] = useState(false);
   const [showTools, setShowTools] = useState(false);
@@ -157,7 +157,7 @@ function App() {
 
   return (
     <div class="flex h-screen">
-      <Sidebar isOpen={isSidebarOpen} userDetails={userDetails} setUserDetails={setUserDetails} onLogout={() => setUserDetails(null)} />
+      <Sidebar isOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} userDetails={userDetails} setUserDetails={setUserDetails} onLogout={() => setUserDetails(null)} />
       <main className="flex-1 flex flex-col relative bg-[#1C1C1C]">
         <Header toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} isSidebarOpen={isSidebarOpen} userDetails={userDetails} />
         

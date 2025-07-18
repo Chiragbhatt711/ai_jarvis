@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import GoogleLoginButton from '../GoogleLoginButton';
 
-export default function Sidebar({ isOpen, userDetails, setUserDetails, onLogout }) {
+export default function Sidebar({ isOpen, userDetails, setUserDetails, onLogout, setIsSidebarOpen }) {
   const [chatHistory, setChatHistory] = useState([]);
   const navigate = useNavigate();
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -12,7 +12,6 @@ export default function Sidebar({ isOpen, userDetails, setUserDetails, onLogout 
   const [showDropdown, setShowDropdown] = useState(false);
   const profileRef = useRef();
 
-  // Fetch chat history when user logs in
   useEffect(() => {
     const fetchChats = async () => {
       try {
@@ -30,10 +29,12 @@ export default function Sidebar({ isOpen, userDetails, setUserDetails, onLogout 
 
   const handleNewChat = () => {
     navigate(`/`);
+    setIsSidebarOpen(false); // ✅ Close sidebar on mobile
   };
 
   const handleSelectChat = (chatId) => {
     navigate(`/c/${chatId}`);
+    setIsSidebarOpen(false); // ✅ Close sidebar on mobile
   };
 
   const handleLogout = () => {
@@ -41,6 +42,7 @@ export default function Sidebar({ isOpen, userDetails, setUserDetails, onLogout 
     onLogout();
     setChatHistory([]);
     navigate('/c');
+    setIsSidebarOpen(false); // ✅ Close sidebar on logout
     window.Swal.fire({
       toast: true,
       icon: 'success',
@@ -53,9 +55,9 @@ export default function Sidebar({ isOpen, userDetails, setUserDetails, onLogout 
 
   const stripMarkdown = (text) => {
     return text
-      .replace(/[#_*~`>[\]()]/g, '')  // remove markdown symbols
-      .replace(/!\[.*?\]\(.*?\)/g, '') // remove images
-      .replace(/\[(.*?)\]\(.*?\)/g, '$1'); // convert [text](link) to text
+      .replace(/[#_*~`>[\]()]/g, '')
+      .replace(/!\[.*?\]\(.*?\)/g, '')
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1');
   };
 
   useEffect(() => {
@@ -75,15 +77,19 @@ export default function Sidebar({ isOpen, userDetails, setUserDetails, onLogout 
         isOpen ? 'translate-x-0' : '-translate-x-full'
       } md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-30 backdrop-blur-sm border-r border-white/10`}
     >
-      {/* Logo and Toggle */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <div className="bg-white/10 p-1.5 rounded-lg">
             <img src={logo} alt="Logo" className="w-6 h-6" />
           </div>
-          <span className="font-semibold text-lg">RudraGPT</span>
+          <span className="font-semibold text-white">RudraGPT</span>
         </div>
-        <button className="p-2 rounded-lg hover:bg-white/10 md:hidden">
+        {/* Toggle button */}
+        <button
+          className="p-2 rounded-lg hover:bg-white/10 md:hidden"
+          onClick={() => setIsSidebarOpen(false)} // ✅ Close on X click
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="w-5 h-5 text-white"
@@ -130,7 +136,7 @@ export default function Sidebar({ isOpen, userDetails, setUserDetails, onLogout 
         )}
       </div>
 
-      {/* Footer Section */}
+      {/* Footer */}
       <div className="border-t border-white/10 pt-1 mt-1">
         {userDetails ? (
           <>
@@ -155,7 +161,6 @@ export default function Sidebar({ isOpen, userDetails, setUserDetails, onLogout 
                 <i className="bi bi-chevron-down text-white/70 text-xs"></i>
               </div>
 
-              {/* Dropdown */}
               {showDropdown && (
                 <div className="absolute left-3 right-3 mt-2 bg-black border border-white/10 rounded-lg shadow-lg z-10">
                   <button
