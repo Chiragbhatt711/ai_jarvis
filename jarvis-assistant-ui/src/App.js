@@ -9,6 +9,7 @@ import JarvisVoicePopup from './JarvisVoicePopup';
 import logo from './assets/logo.jpeg';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
+import CodeBlockWithCopy from './components/CodeBlockWithCopy';
 import GoogleLoginButton from './GoogleLoginButton';
 import { BrowserRouter, Routes, Route, useParams, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -185,13 +186,45 @@ function App() {
                           remarkPlugins={[remarkGfm]}
                           rehypePlugins={[rehypeHighlight]}
                           components={{
-                            pre: ({ node, ...props }) => (
-                              <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-x-auto" {...props} />
-                            ),
-                            code: ({ inline, className, children, ...props }) => (
-                              <code className="font-mono text-sm" {...props}>
+                            p: ({ node, children }) => (
+                              <p className="text-base text-gray-300 mb-3 leading-relaxed">
                                 {children}
-                              </code>
+                              </p>
+                            ),
+                            strong: ({ node, children }) => (
+                              <strong className="text-yellow-400 font-semibold">
+                                {children}
+                              </strong>
+                            ),
+                            pre: CodeBlockWithCopy,
+                            code: ({ inline, className, children, ...props }) => {
+                              
+                              const codeText = Array.isArray(children)
+                                ? children.join("")
+                                : children?.toString?.() || "";
+                              return inline ? (
+                                <code className="bg-gray-800 text-green-300 px-1 py-0.5 rounded font-mono text-sm" {...props}>
+                                  {children}
+                                </code>
+                              ) : (
+                                <code className={`font-mono text-sm ${className}`} {...props}>
+                                  {children}
+                                </code>
+                              );
+                              // return <CodeBlockWithCopy>{String(children)}</CodeBlockWithCopy>;
+                            },
+                            a: ({ href, children }) => (
+                              <a
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:underline font-medium"
+                              >
+                                {children}
+                              </a>
+                            ),
+                            img: ({ src, alt }) => (
+                              <img src={src} alt={alt} className="w-6 h-6 inline-block mx-1" />
                             ),
                           }}
                         />

@@ -76,23 +76,51 @@ def chat(request: ChatRequest):
                                         {search_content}
                                         Now answer the question using the results above.
                                         """
+        conn = get_connection()
+        cursor = conn.cursor()
 
+        # Step 1: Fetch all previous messages
+        cursor.execute("""
+            SELECT message, is_from_user, created_at
+            FROM chat_messages
+            WHERE chat_id = %s
+            ORDER BY created_at ASC
+        """, (request.chat_id,))
+        messages = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        # Step 2: Construct messages list with system message first
+        chat_history = [
+            {
+                "role": "system",
+                "content": (
+                    "You are Rudra GPT, an AI assistant created by Chirag Bhatt at Rudra Technovation. "
+                    "You can also search the web to find real-time information when needed. "
+                    "Answer all questions normally. Only mention Chirag Bhatt if the user asks who developed you or something similar."
+                )
+            }
+        ]
+
+        # Step 3: Add past chat messages
+        for msg, is_from_user, created_at in messages:
+            role = "user" if is_from_user else "assistant"
+            chat_history.append({
+                "role": role,
+                "content": msg
+            })
+
+        # Step 4: Add the current user message
+        chat_history.append({
+            "role": "user",
+            "content": user_content_for_api
+        })
+
+        # Step 5: Prepare the payload
         payload = {
             "model": MODEL_NAME,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": (
-                        "You are Rudra GPT, an AI assistant created by Chirag Bhatt at Rudra Technovation. "
-                        "You can also search the web to find real-time information when needed. "
-                        "Answer all questions normally. Only mention Chirag Bhatt if the user asks who developed you or something similar."
-                    )
-                },
-                {
-                    "role": "user",
-                    "content": user_content_for_api
-                }
-            ]
+            "messages": chat_history
         }
 
         response = requests.post(GROQ_API_URL, headers=headers, json=payload)
@@ -335,8 +363,6 @@ def get_chat_messages(chat_id: str):
     conn = get_connection()
     cursor = conn.cursor()
 
-  
-    # Step 2: Get all messages from chat_messages table
     cursor.execute("""
         SELECT message, is_from_user, created_at
         FROM chat_messages
