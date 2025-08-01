@@ -95,7 +95,7 @@ function App() {
     } catch (error) {
       const errorMessage = {
         from: "jarvis",
-        text: "Error: Could not connect to Jarvis API",
+        text: "Error: Somthing went wrong while processing your request. Please try again later.",
       };
       setMessages((prev) => [...prev, errorMessage]);
     }
@@ -341,6 +341,30 @@ function App() {
                     }
                   }}
                 />
+
+                {/* Voice Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowVoicePopup(true)}
+                  className="absolute right-12 top-1/2 -translate-y-1/2 p-2 bg-gray-700 rounded-lg hover:bg-gray-800 transition-colors"
+                  title="Start voice input"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-5 h-5 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 1a3 3 0 013 3v7a3 3 0 01-6 0V4a3 3 0 013-3zm6 10a6 6 0 01-12 0m6 6v4m-4 0h8"
+                    />
+                  </svg>
+                </button>
+
                 <button
                   type="submit"
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"

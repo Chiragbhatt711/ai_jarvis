@@ -43,6 +43,14 @@ class ChatResponse(BaseModel):
     status: str
     timestamp: str
 
+class VoiceChatRequest(BaseModel):
+    message: str
+
+class VoiceChatResponse(BaseModel):
+    response: str
+    status: str
+    timestamp: str
+
 class TokenData(BaseModel):
     token: str
 
@@ -135,6 +143,56 @@ def chat(request: ChatRequest):
         if request.chat_id != "null" and request.user_id != "null":
             # Store AI response in the database
             store_chat_message(request.chat_id, request.user_id, message_content, is_from_user=False)
+
+        return ChatResponse(
+            response=message_content,
+            status="success",
+            timestamp=datetime.now().isoformat()
+        )
+
+    except Exception as e:
+        print(f"Error in chat endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+@app.post("/voice-chat", response_model=VoiceChatResponse)
+def chat(request: VoiceChatRequest):
+    try:
+        user_content_for_api = request.message
+        headers = {
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json"
+        }
+
+        chat_history = [
+            {
+                "role": "system",
+                "content": (
+                    "You are Rudra GPT, an AI assistant created by Chirag Bhatt at Rudra Technovation. "
+                    "Your tone is friendly, helpful, and expressive. "
+                    "This is a voice chat, so keep your responses short and to the point. "
+                    "Only mention Chirag Bhatt if the user asks who developed you or something similar."
+                )
+            }
+        ]
+
+        # Step 4: Add the current user message
+        chat_history.append({
+            "role": "user",
+            "content": user_content_for_api
+        })
+
+        # Step 5: Prepare the payload
+        payload = {
+            "model": MODEL_NAME,
+            "messages": chat_history
+        }
+
+        response = requests.post(GROQ_API_URL, headers=headers, json=payload)
+        if response.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Groq API error: {response.text}")
+
+        data = response.json()
+        message_content = data["choices"][0]["message"]["content"]
 
         return ChatResponse(
             response=message_content,
@@ -254,18 +312,19 @@ def store_chat_message(chat_id="", user_id="", message="", is_from_user=False):
         }
 
         payload = {
-            "model": "mistral-saba-24b",
+            "model": MODEL_NAME,
             "messages": [
                 {
-                    "role": "system",
-                    "content": (
-                        "You are Rudra GPT, an AI assistant created by Chirag Bhatt at Rudra Technovation. "
-                        "Answer all questions normally. Only mention Chirag Bhatt if the user asks who developed you or something similar."
-                    )
+                "role": "system",
+                "content": (
+                    "Generate a short title label for the conversation based on the user's message. "
+                    "The title should be 2-3 words only. Do NOT respond with anything else. "
+                    "Just return the label. Do NOT include greetings or explanations."
+                )
                 },
                 {
-                    "role": "user",
-                    "content": f"Generate a short title for this conversation: '{message}'"
+                "role": "user",
+                "content": f"{message}"
                 }
             ]
         }
@@ -276,7 +335,6 @@ def store_chat_message(chat_id="", user_id="", message="", is_from_user=False):
 
         data = response.json()
         chat_lable = data["choices"][0]["message"]["content"]
-
         cursor.execute(
             "INSERT INTO chats (chat_id, user_id, label) VALUES (%s, %s, %s) RETURNING id",
             (chat_id, user_id, chat_lable)

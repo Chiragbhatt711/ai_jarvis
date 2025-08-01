@@ -11,11 +11,11 @@ const VoiceVisualizer = ({ active }) => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d', { alpha: true }); // ✅ Enable alpha for full transparency
+    if (!canvas || !active) return;
+
+    const ctx = canvas.getContext('2d', { alpha: true });
     canvas.width = 300;
     canvas.height = 200;
-
-    if (!active) return;
 
     const startAudio = async () => {
       try {
@@ -37,16 +37,16 @@ const VoiceVisualizer = ({ active }) => {
     };
 
     const draw = () => {
-      animationRef.current = requestAnimationFrame(draw);
+      if (!canvasRef.current || !analyserRef.current) return;
 
       const ctx = canvasRef.current.getContext('2d');
+      animationRef.current = requestAnimationFrame(draw);
+
       analyserRef.current.getByteFrequencyData(dataArrayRef.current);
       const volume = dataArrayRef.current.reduce((a, b) => a + b, 0) / dataArrayRef.current.length;
 
-      // ✅ Clear with full transparency
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw glowing wave
       ctx.beginPath();
       ctx.strokeStyle = 'rgba(0, 255, 255, 0.9)';
       ctx.lineWidth = 2;

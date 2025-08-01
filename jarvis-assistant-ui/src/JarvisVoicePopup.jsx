@@ -39,6 +39,8 @@ const JarvisVoicePopup = ({ show, onHide }) => {
       const text = event.results[0][0].transcript;
       setTranscript(text);
       setMessage(text);
+      console.log(`📝 Recognized text: ${text}`);
+      
       await getAIResponse(text);
     };
 
@@ -69,7 +71,7 @@ const JarvisVoicePopup = ({ show, onHide }) => {
 
   const getAIResponse = async (text) => {
     try {
-      const res = await axios.post(`${API_BASE_URL}/chat`, {
+      const res = await axios.post(`${API_BASE_URL}/voice-chat`, {
         message: text,
       });
 
@@ -81,6 +83,7 @@ const JarvisVoicePopup = ({ show, onHide }) => {
       const errorText = "There was an error processing your request.";
       setResponse(errorText);
       speakOutLoud(errorText);
+      setIsListening(true);
     }
   };
 
@@ -88,12 +91,18 @@ const JarvisVoicePopup = ({ show, onHide }) => {
 
   const loadVoices = () => {
     const voices = window.speechSynthesis.getVoices();
-    
+
+    if (!voices.length) {
+      // Voice list not ready yet
+      return;
+    }
+
     selectedVoice = voices.find(v => v.name === "Google US English")
                   || voices.find(v => v.name === "Microsoft Zira - English (United States)")
                   || voices.find(v => v.name === "Google UK English Female")
                   || voices.find(v => v.lang === "en-US");
-
+    console.log("🔊 Available voices:", selectedVoice);
+    
     if (!selectedVoice) {
       console.warn("⚠️ No preferred voice found. Voices loaded:", voices.map(v => v.name));
     } else {
@@ -101,10 +110,12 @@ const JarvisVoicePopup = ({ show, onHide }) => {
     }
   };
 
-  // Attach listener for when voices are ready
-  window.speechSynthesis.onvoiceschanged = loadVoices;
+  // Wait for voices to be loaded
+  if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
 
-  // Also try loading immediately (in case voices are already available)
+  // Also try to load immediately in case voices are already available
   loadVoices();
 
   const speakOutLoud = (text) => {
@@ -133,9 +144,11 @@ const JarvisVoicePopup = ({ show, onHide }) => {
       <img src={bgImage} alt="Jarvis AI" style={styles.bgImage} />
 
       {/* Voice visualizer aligned at mouth */}
-      <div style={styles.waveContainer}>
-        <VoiceVisualizer active={isListening} />
-      </div>
+      {isListening && (
+        <div style={styles.waveContainer}>
+          <VoiceVisualizer active={true} />
+        </div>
+      )}
 
       {/* Close button */}
       <button style={styles.closeBtn} onClick={handleClose} className='circle'>Back</button>
@@ -146,41 +159,51 @@ const JarvisVoicePopup = ({ show, onHide }) => {
 const styles = {
   popup: {
     position: 'fixed',
-    top: '63px',
-    left: '269px',
-    width: '78vw',
-    height: '84vh',
+    top: '0',
+    left: '0',
+    width: '100%',
+    height: '100%',
     overflow: 'hidden',
     zIndex: 9999,
+    borderRadius: '20px',
+    boxShadow: '0 0 20px rgba(0, 255, 255, 0.2)',
   },
   bgImage: {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
+    filter: 'brightness(1.1) saturate(1.2)',
   },
   waveContainer: {
     position: 'absolute',
-    bottom: '23%',  // Adjust to align with mouth
-    left: '45%',
-    width: '317px',
-    height: '200px',
+    bottom: '24%',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: '240px',
+    height: '150px',
     zIndex: 2,
     pointerEvents: 'none',
-    backgroundColor: 'transparent',
-    backdropFilter: 'none',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: '16px',
+    backdropFilter: 'blur(8px)',
+    boxShadow: '0 0 20px rgba(0, 255, 255, 0.3)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   closeBtn: {
     position: 'absolute',
-    top: 0,
-    right: 0,
-    padding: '10px 20px',
-    border: 'none',
-    background: '#fff',
+    top: '16px',
+    right: '16px',
+    padding: '8px 16px',
+    background: 'rgba(255,255,255,0.9)',
     color: '#000',
     fontWeight: 'bold',
-    borderRadius: '5px',
-    zIndex: 3,
+    borderRadius: '8px',
+    border: 'none',
     cursor: 'pointer',
+    zIndex: 3,
+    boxShadow: '0 0 10px rgba(255,255,255,0.3)',
   }
 };
 
