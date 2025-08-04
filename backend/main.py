@@ -1,6 +1,6 @@
 # main.py - FastAPI Backend with Groq + Mistral (Python 3.13 Compatible)
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from psycopg2.extras import RealDictCursor
 from pydantic import BaseModel
@@ -11,6 +11,10 @@ import os
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from typing import List, Optional
+from duckduckgo_search import DDGS
+from sentence_transformers import SentenceTransformer
+import faiss
+import numpy as np
 
 load_dotenv()
 
@@ -20,6 +24,9 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 MODEL_NAME = os.getenv("MODEL_NAME")
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
 # === FASTAPI INIT ===
 app = FastAPI(title=os.getenv("APP_NAME"), version=os.getenv("APP_VERSION"),debug=True)
 
@@ -35,6 +42,7 @@ app.add_middleware(
 class ChatRequest(BaseModel):
     message: str
     web_search: bool = False
+    deep_search: bool = False
     user_id: str = ''
     chat_id: str = ''
 
@@ -84,6 +92,21 @@ def chat(request: ChatRequest):
                                         {search_content}
                                         Now answer the question using the results above.
                                         """
+        
+        if request.deep_search:
+            docs = search_web(request.message, max_results=20)
+            vectors = embed_text(docs)
+            store.add(vectors, docs)
+            query_vec = embed_text([request.message])[0]
+            results = store.search(query_vec, k=15)
+            result_text = "\n".join(results)
+            user_content_for_api = f"""Answer the following question in **clear, well-explained detail**, using the information from the deep search results below.
+                                    Question: {request.message}
+                                    Deep Search Results:
+                                    {result_text}
+                                    Make sure to explain each part step-by-step and provide practical advice or examples where helpful.
+                                    """
+        
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -442,6 +465,34 @@ def get_chat_messages(chat_id: str):
         )
         for row in messages
     ]
+
+def embed_text(texts):
+    return model.encode(texts)
+
+# --- Vector store ---
+class VectorStore:
+    def __init__(self, dim=384):
+        self.index = faiss.IndexFlatL2(dim)
+        self.texts = []
+
+    def add(self, vectors, texts):
+        self.index.add(np.array(vectors).astype('float32'))
+        self.texts.extend(texts)
+
+    def search(self, vector, k=5):
+        D, I = self.index.search(np.array([vector]).astype('float32'), k)
+        return [self.texts[i] for i in I[0]]
+
+store = VectorStore()
+
+# --- DuckDuckGo Search ---
+def search_web(query, max_results=5):
+    results = []
+    with DDGS() as ddgs:
+        for r in ddgs.text(query, region='wt-wt', safesearch='Moderate', max_results=max_results):
+            results.append(f"{r['title']}: {r['body']}")
+    return results
+
 # === HEALTH CHECK ROUTE ===
 @app.get("/")
 def root():

@@ -21,6 +21,7 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userDetails, setUserDetails] = useState(null);
   const [isWebSearchEnabled, setIsWebSearchEnabled] = useState(false);
+  const [isDeepSearchEnabled, setIsDeepSearchEnabled] = useState(false);
   const [showTools, setShowTools] = useState(false);
   const toggleRef = useRef(null);
   const textareaRef = useRef();
@@ -77,30 +78,56 @@ function App() {
 
     const userMessage = { from: "user", text: input };
     const user_id = localStorage.getItem("user_id");
+
+    // Add user's message
     setMessages((prev) => [...prev, userMessage]);
+
+    // Add placeholder message with loading state
+    const placeholderId = Date.now(); // unique ID for replacement
+    const thinkingMessage = {
+      id: placeholderId,
+      from: "jarvis",
+      text: "Thinking...",
+      isLoading: true
+    };
+    setMessages((prev) => [...prev, thinkingMessage]);
+    setInput("");
 
     try {
       const res = await axios.post(`${API_BASE_URL}/chat`, {
         message: input,
         web_search: isWebSearchEnabled,
+        deep_search: isDeepSearchEnabled,
         user_id: String(user_id),
         chat_id: String(chatId),
       });
 
       const jarvisReply = {
+        id: placeholderId,
         from: "jarvis",
         text: res.data.response,
+        isLoading: false
       };
-      setMessages((prev) => [...prev, jarvisReply]);
+
+      // Replace the placeholder with actual response
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === placeholderId ? jarvisReply : msg
+        )
+      );
     } catch (error) {
       const errorMessage = {
+        id: placeholderId,
         from: "jarvis",
-        text: "Error: Somthing went wrong while processing your request. Please try again later.",
+        text: "Error: Something went wrong while processing your request. Please try again later.",
+        isLoading: false
       };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === placeholderId ? errorMessage : msg
+        )
+      );
     }
-
-    setInput("");
   };
 
     const [inputValue, setInputValue] = useState('');
@@ -177,57 +204,59 @@ function App() {
             ) : (
               messages.map((msg, idx) => (
                 <div key={idx} className={`mb-4 ${msg.from === 'user' || msg.from_ === 'user' ? 'text-right' : 'text-left'} text-white`}>
-                  {msg.from === 'jarvis' || msg.from_ === 'jarvis' ? (
+                  {(msg.from === 'jarvis' || msg.from_ === 'jarvis') ? (
                     <div className="flex items-start gap-2">
-                      <img src={logo} alt="Jarvis" className="w-8 h-8 rounded-full" />
+                      <img src={logo} alt="Jarvis" className="w-8 h-8 rounded-full animate-pulse" />
                       <div className="markdown-response text-sm md:text-base">
-                        <ReactMarkdown
-                          children={msg.text}
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeHighlight]}
-                          components={{
-                            p: ({ node, children }) => (
-                              <p className="text-base text-gray-300 mb-3 leading-relaxed">
-                                {children}
-                              </p>
-                            ),
-                            strong: ({ node, children }) => (
-                              <strong className="text-yellow-400 font-semibold">
-                                {children}
-                              </strong>
-                            ),
-                            pre: CodeBlockWithCopy,
-                            code: ({ inline, className, children, ...props }) => {
-                              
-                              const codeText = Array.isArray(children)
-                                ? children.join("")
-                                : children?.toString?.() || "";
-                              return inline ? (
-                                <code className="bg-gray-800 text-green-300 px-1 py-0.5 rounded font-mono text-sm" {...props}>
+                        {msg.isLoading ? (
+                          <p className="text-base text-gray-400 italic animate-pulse">Thinking...</p>
+                        ) : (
+                          <ReactMarkdown
+                            children={msg.text}
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeHighlight]}
+                            components={{
+                              p: ({ node, children }) => (
+                                <p className="text-base text-gray-300 mb-3 leading-relaxed">
                                   {children}
-                                </code>
-                              ) : (
-                                <code className={`font-mono text-sm ${className}`} {...props}>
+                                </p>
+                              ),
+                              strong: ({ node, children }) => (
+                                <strong className="text-yellow-400 font-semibold">
                                   {children}
-                                </code>
-                              );
-                              // return <CodeBlockWithCopy>{String(children)}</CodeBlockWithCopy>;
-                            },
-                            a: ({ href, children }) => (
-                              <a
-                                href={href}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-400 hover:underline font-medium"
-                              >
-                                {children}
-                              </a>
-                            ),
-                            img: ({ src, alt }) => (
-                              <img src={src} alt={alt} className="w-6 h-6 inline-block mx-1" />
-                            ),
-                          }}
-                        />
+                                </strong>
+                              ),
+                              pre: CodeBlockWithCopy,
+                              code: ({ inline, className, children, ...props }) => {
+                                const codeText = Array.isArray(children)
+                                  ? children.join("")
+                                  : children?.toString?.() || "";
+                                return inline ? (
+                                  <code className="bg-gray-800 text-green-300 px-1 py-0.5 rounded font-mono text-sm" {...props}>
+                                    {children}
+                                  </code>
+                                ) : (
+                                  <code className={`font-mono text-sm ${className}`} {...props}>
+                                    {children}
+                                  </code>
+                                );
+                              },
+                              a: ({ href, children }) => (
+                                <a
+                                  href={href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-400 hover:underline font-medium"
+                                >
+                                  {children}
+                                </a>
+                              ),
+                              img: ({ src, alt }) => (
+                                <img src={src} alt={alt} className="w-6 h-6 inline-block mx-1" />
+                              ),
+                            }}
+                          />
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -315,6 +344,34 @@ function App() {
                         <p className="font-medium text-sm">Web Search</p>
                         <p className="text-xs text-gray-400">
                           {isWebSearchEnabled ? 'Web search is enabled' : 'Enable internet results'}
+                        </p>
+                      </div>
+                    </button>
+
+                    {/* Deep Search Tool */}
+                    <button
+                      onClick={() => setIsDeepSearchEnabled(prev => !prev)}
+                      className={`flex items-start gap-2 p-2 rounded-md text-white text-left transition ${
+                        isDeepSearchEnabled ? 'bg-white/10 border border-white/20' : 'hover:bg-white/10'
+                      }`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-5 h-5 mt-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3 10h4l3-3m0 0l3 3h4m-7-3v10"
+                        />
+                      </svg>
+                      <div>
+                        <p className="font-medium text-sm">Deep Search</p>
+                        <p className="text-xs text-gray-400">
+                          {isDeepSearchEnabled ? 'Deep search is enabled' : 'Enable AI semantic search'}
                         </p>
                       </div>
                     </button>
