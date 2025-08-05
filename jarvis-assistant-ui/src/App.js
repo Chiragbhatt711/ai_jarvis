@@ -254,6 +254,26 @@ function App() {
                               img: ({ src, alt }) => (
                                 <img src={src} alt={alt} className="w-6 h-6 inline-block mx-1" />
                               ),
+                              table: ({ children }) => (
+                                <table className="table-auto border border-gray-600 my-4 text-sm text-left w-full text-gray-300">
+                                  {children}
+                                </table>
+                              ),
+                              thead: ({ children }) => (
+                                <thead className="bg-gray-700 text-gray-100">
+                                  {children}
+                                </thead>
+                              ),
+                              tbody: ({ children }) => (
+                                <tbody className="divide-y divide-gray-600">{children}</tbody>
+                              ),
+                              tr: ({ children }) => <tr className="border-b border-gray-600">{children}</tr>,
+                              th: ({ children }) => (
+                                <th className="px-4 py-2 font-medium border border-gray-500">{children}</th>
+                              ),
+                              td: ({ children }) => (
+                                <td className="px-4 py-2 border border-gray-600">{children}</td>
+                              ),
                             }}
                           />
                         )}
@@ -400,7 +420,7 @@ function App() {
                 />
 
                 {/* Voice Button */}
-                <button
+                {/* <button
                   type="button"
                   onClick={() => setShowVoicePopup(true)}
                   className="absolute right-12 top-1/2 -translate-y-1/2 p-2 bg-gray-700 rounded-lg hover:bg-gray-800 transition-colors"
@@ -420,7 +440,7 @@ function App() {
                       d="M12 1a3 3 0 013 3v7a3 3 0 01-6 0V4a3 3 0 013-3zm6 10a6 6 0 01-12 0m6 6v4m-4 0h8"
                     />
                   </svg>
-                </button>
+                </button> */}
 
                 <button
                   type="submit"
