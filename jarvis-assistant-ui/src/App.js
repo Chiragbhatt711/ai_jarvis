@@ -222,9 +222,11 @@ function App() {
                                 </p>
                               ),
                               strong: ({ node, children }) => (
-                                <strong className="text-yellow-400 font-semibold">
-                                  {children}
-                                </strong>
+                                <h3 className="text-lg text-gray-200 mb-2">
+                                  <strong className="font-semibold">
+                                    {children}
+                                  </strong>
+                                </h3>
                               ),
                               pre: CodeBlockWithCopy,
                               code: ({ inline, className, children, ...props }) => {

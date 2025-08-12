@@ -1,0 +1,115 @@
+/* Global Styles */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Montserrat", "Open Sans", sans-serif !important;
+  font-size: 16px !important;
+  line-height: 1.5 !important;
+  color: #333 !important;
+  background-color: #f9f9f9 !important;
+}
+
+/* Headings */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Playfair Display", "Montserrat", sans-serif !important;
+  font-weight: bold !important;
+  margin-bottom: 10px !important;
+  color: #2196f3;
+}
+
+h1 {
+  font-size: 36px !important;
+}
+
+h2 {
+  font-size: 24px !important;
+}
+
+h3 {
+  font-size: 18px !important;
+}
+
+h4, h5, h6 {
+  font-size: 16px !important;
+}
+
+/* Paragraphs */
+
+p {
+  margin-bottom: 20px;
+  text-align: justify;
+}
+
+/* Links */
+
+a {
+  text-decoration: none;
+  color: #2196f3;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: #0069d9;
+}
+
+/* Best Attractive Font Style */
+
+.font-playfair {
+  font-family: "Playfair Display", serif;
+  font-weight: bold;
+  font-size: 24px;
+  color: #2196f3;
+  line-height: 1.2;
+}
+
+.font-montserrat {
+  font-family: "Montserrat", sans-serif;
+  font-weight: bold;
+  font-size: 18px;
+  color: #333;
+  line-height: 1.5;
+}
+
+/* Responsive Design */
+
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+  h1 {
+    font-size: 28px;
+  }
+  h2 {
+    font-size: 20px;
+  }
+  h3 {
+    font-size: 16px;
+  }
+  h4, h5, h6 {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 12px;
+  }
+  h1 {
+    font-size: 20px;
+  }
+  h2 {
+    font-size: 16px;
+  }
+  h3 {
+    font-size: 14px;
+  }
+  h4, h5, h6 {
+    font-size: 12px;
+  }
+}
